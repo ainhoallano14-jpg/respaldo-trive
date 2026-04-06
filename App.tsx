@@ -1,5 +1,5 @@
 import "react-native-gesture-handler";
-import AppNavigator from "./assets/navigation/AppNavigator";
+import AppNavigator from "./src/navigation/AppNavigator";
 
 export default function App() {
   return <AppNavigator />;
