@@ -208,7 +208,7 @@ export default function TripHistoryScreen() {
 
                 <TouchableOpacity
                   style={styles.repeatBtn}
-                  onPress={() => navigation.navigate('Search' as never)}
+                  onPress={() => navigation.navigate('Main' as never, { screen: 'Search' } as never)}
                 >
                   <Ionicons name="repeat" size={18} color={COLORS.primary} />
                   <Text style={styles.repeatBtnText}>Repetir ruta</Text>

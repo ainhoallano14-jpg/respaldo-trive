@@ -154,51 +154,101 @@ export const useNotifications = (userId?: string) => {
   useEffect(() => {
     if (!userId) return;
 
-    fetchNotifications();
+    let isMounted = true;
+    let channelRef: any = null;
 
-    // Suscribirse a cambios
-    const subscription = supabase
-      .channel(`notifications:${userId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            const newNotif = payload.new as Notification;
-            setNotifications((prev) => [newNotif, ...prev]);
-            if (!newNotif.is_read) {
-              setUnreadCount((prev) => prev + 1);
-            }
-          } else if (payload.eventType === 'UPDATE') {
-            const updated = payload.new as Notification;
-            setNotifications((prev) =>
-              prev.map((n) => (n.id === updated.id ? updated : n))
-            );
-            const oldUnread = payload.old?.is_read === false;
-            const newUnread = updated.is_read === false;
-            if (oldUnread && !newUnread) {
-              setUnreadCount((prev) => Math.max(0, prev - 1));
-            }
-          } else if (payload.eventType === 'DELETE') {
-            const deleted = payload.old as Notification;
-            setNotifications((prev) =>
-              prev.filter((n) => n.id !== deleted.id)
-            );
-            if (deleted.is_read === false) {
-              setUnreadCount((prev) => Math.max(0, prev - 1));
+    const setupSubscription = async () => {
+      try {
+        // Limpiar canal anterior si existe
+        const existingChannel = supabase.getChannels()
+          .find((c: any) => c.topic === `realtime:notifications:${userId}`);
+        
+        if (existingChannel) {
+          await existingChannel.unsubscribe();
+          await supabase.removeChannel(existingChannel);
+        }
+
+        // Cargar notificaciones iniciales
+        await fetchNotifications();
+
+        if (!isMounted) return;
+
+        // Crear nuevo canal
+        channelRef = supabase.channel(`notifications:${userId}`, {
+          config: {
+            broadcast: { self: true },
+          },
+        });
+
+        // Agregar listener ANTES de subscribe
+        channelRef.on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${userId}`,
+          },
+          (payload: any) => {
+            if (!isMounted) return;
+
+            if (payload.eventType === 'INSERT') {
+              const newNotif = payload.new as Notification;
+              setNotifications((prev) => [newNotif, ...prev]);
+              if (!newNotif.is_read) {
+                setUnreadCount((prev) => prev + 1);
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const updated = payload.new as Notification;
+              setNotifications((prev) =>
+                prev.map((n) => (n.id === updated.id ? updated : n))
+              );
+              const oldUnread = payload.old?.is_read === false;
+              const newUnread = updated.is_read === false;
+              if (oldUnread && !newUnread) {
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+              }
+            } else if (payload.eventType === 'DELETE') {
+              const deleted = payload.old as Notification;
+              setNotifications((prev) =>
+                prev.filter((n) => n.id !== deleted.id)
+              );
+              if (deleted.is_read === false) {
+                setUnreadCount((prev) => Math.max(0, prev - 1));
+              }
             }
           }
-        }
-      )
-      .subscribe();
+        );
+
+        // AHORA suscribirse
+        await channelRef.subscribe((status: string) => {
+          if (isMounted) {
+            if (status === 'SUBSCRIBED') {
+              console.log('Subscribed to notifications');
+            } else if (status === 'CLOSED') {
+              console.log('Subscription closed');
+            } else if (status === 'CHANNEL_ERROR') {
+              console.log('Channel error');
+            }
+          }
+        });
+      } catch (err) {
+        console.error('Error setting up subscription:', err);
+      }
+    };
+
+    setupSubscription();
 
     return () => {
-      subscription.unsubscribe();
+      isMounted = false;
+      if (channelRef) {
+        try {
+          channelRef.unsubscribe();
+          supabase.removeChannel(channelRef);
+        } catch (err) {
+          console.error('Error cleaning up subscription:', err);
+        }
+      }
     };
   }, [userId]);
 

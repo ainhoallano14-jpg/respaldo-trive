@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useAppStore } from '../store/useAppStore'
 import { useBookings } from '../hooks/useBookings'
@@ -34,7 +35,7 @@ export default function BookingScreen() {
           <Text style={styles.errorText}>No hay datos de reserva</Text>
           <TouchableOpacity
             style={styles.retryBtn}
-            onPress={() => navigation.navigate('Search' as never)}
+            onPress={() => navigation.navigate('Main' as never, { screen: 'Search' } as never)}
           >
             <Ionicons name="search" size={20} color={COLORS.textInverse} />
             <Text style={styles.retryBtnText}>Buscar rutas</Text>
@@ -138,39 +139,54 @@ export default function BookingScreen() {
         </View>
 
         {/* Route Card */}
-        <View style={styles.tripCard}>
+        <LinearGradient
+          colors={[COLORS.primary + 'F5', COLORS.primary + 'A0']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.tripCardGradient}
+        >
           <View style={styles.routeRow}>
             <View style={styles.routePoint}>
-              <View style={styles.routeDotStart} />
+              <View style={[styles.routeDotStart, { backgroundColor: COLORS.accent }]} />
               <Text style={styles.routeLabel}>Desde</Text>
-              <Text style={styles.routeText}>{selectedRoute.origin}</Text>
+              <Text style={[styles.routeText, { color: '#fff' }]}>{selectedRoute.origin}</Text>
             </View>
-            <View style={styles.routeLine} />
+            <View style={styles.routeLineContainer}>
+              <View style={styles.routeLine} />
+              <View style={styles.carIconContainer}>
+                <Ionicons name="car-outline" size={20} color="#fff" />
+              </View>
+            </View>
             <View style={styles.routePoint}>
-              <View style={styles.routeDotEnd} />
+              <View style={[styles.routeDotEnd, { backgroundColor: '#10B981' }]} />
               <Text style={styles.routeLabel}>Hacia</Text>
-              <Text style={styles.routeText}>{selectedRoute.destination}</Text>
+              <Text style={[styles.routeText, { color: '#fff' }]}>{selectedRoute.destination}</Text>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]} />
 
           <View style={styles.detailsGrid}>
             <View style={styles.detailItem}>
-              <Ionicons name="calendar-outline" size={20} color={COLORS.textSecondary} />
-              <Text style={styles.detailLabel}>Fecha</Text>
-              <Text style={styles.detailValue}>{formattedDate}</Text>
+              <Ionicons name="calendar-outline" size={20} color="#fff" />
+              <Text style={[styles.detailLabel, { color: 'rgba(255,255,255,0.8)' }]}>Fecha</Text>
+              <Text style={[styles.detailValue, { color: '#fff' }]}>{formattedDate}</Text>
             </View>
             <View style={styles.detailItem}>
-              <Ionicons name="time-outline" size={20} color={COLORS.textSecondary} />
-              <Text style={styles.detailLabel}>Hora</Text>
-              <Text style={styles.detailValue}>{formattedTime}</Text>
+              <Ionicons name="time-outline" size={20} color="#fff" />
+              <Text style={[styles.detailLabel, { color: 'rgba(255,255,255,0.8)' }]}>Hora</Text>
+              <Text style={[styles.detailValue, { color: '#fff' }]}>{formattedTime}</Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Seats Card */}
-        <View style={styles.seatsCard}>
+        <LinearGradient
+          colors={['#FFFFFF', COLORS.primary + '1A']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.seatsCardGradient}
+        >
           <Text style={styles.sectionTitle}>Asientos seleccionados</Text>
           <View style={styles.seatsBadges}>
             {seat_numbers.map((seatNum: number) => (
@@ -182,10 +198,15 @@ export default function BookingScreen() {
           <Text style={styles.seatsSummary}>
             {seatsCount} {seatsCount === 1 ? 'asiento' : 'asientos'} · ${selectedRoute.price_per_seat.toLocaleString('es-CO')} c/u
           </Text>
-        </View>
+        </LinearGradient>
 
         {/* Passenger Card */}
-        <View style={styles.passengerCard}>
+        <LinearGradient
+          colors={['#FFFFFF', COLORS.primary + '12']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.passengerCardGradient}
+        >
           <Text style={styles.sectionTitle}>Datos del pasajero</Text>
 
           <View style={styles.passengerRow}>
@@ -197,15 +218,20 @@ export default function BookingScreen() {
               <Text style={styles.passengerPhone}>{user.phone || user.email}</Text>
             </View>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Vehicle Card */}
-        <View style={styles.vehicleCard}>
+        <LinearGradient
+          colors={['#FFFFFF', COLORS.primary + '15']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.vehicleCardGradient}
+        >
           <View style={styles.vehicleRow}>
             <Ionicons name="car" size={20} color={COLORS.primary} />
             <View style={styles.vehicleInfo}>
               <Text style={styles.vehicleName}>{selectedRoute.vehicle_make} {selectedRoute.vehicle_color}</Text>
-              <Text style={styles.vehiclePlate}>{selectedRoute.license_plate}</Text>
+              <Text style={styles.vehiclePlate}>{selectedRoute.vehicle_plate}</Text>
             </View>
           </View>
           {selectedRoute.driver_name && (
@@ -214,10 +240,15 @@ export default function BookingScreen() {
               <Text style={styles.driverName}>Conductor: {selectedRoute.driver_name}</Text>
             </View>
           )}
-        </View>
+        </LinearGradient>
 
         {/* Payment Method */}
-        <View style={styles.paymentCard}>
+        <LinearGradient
+          colors={['#FFFFFF', COLORS.primary + '10']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.paymentCardGradient}
+        >
           <Text style={styles.sectionTitle}>Método de pago</Text>
 
           <TouchableOpacity
@@ -240,10 +271,15 @@ export default function BookingScreen() {
               Tarjeta (próximamente)
             </Text>
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
 
         {/* Price Summary */}
-        <View style={styles.priceCard}>
+        <LinearGradient
+          colors={['#FFFFFF', COLORS.primary + '0D']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.priceCardGradient}
+        >
           <View style={styles.priceRow}>
             <Text style={styles.priceLabel}>
               Viaje ({seatsCount} × ${selectedRoute.price_per_seat.toLocaleString('es-CO')})
@@ -263,24 +299,35 @@ export default function BookingScreen() {
               ${finalTotal.toLocaleString('es-CO')}
             </Text>
           </View>
-        </View>
+        </LinearGradient>
 
         {/* Action Buttons */}
-        <TouchableOpacity
-          style={[styles.confirmBtn, loading && styles.confirmBtnDisabled]}
-          onPress={handleConfirmBooking}
-          disabled={loading}
-          activeOpacity={0.8}
+        <LinearGradient
+          colors={
+            loading
+              ? [COLORS.border, COLORS.border]
+              : [COLORS.primary, COLORS.primary + 'E0']
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.confirmBtnGradient}
         >
-          {loading ? (
-            <ActivityIndicator color={COLORS.textInverse} />
-          ) : (
-            <>
-              <Ionicons name="checkmark-circle" size={22} color={COLORS.textInverse} />
-              <Text style={styles.confirmBtnText}>Confirmar Reserva</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.confirmBtnInner}
+            onPress={handleConfirmBooking}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color={COLORS.textSecondary} />
+            ) : (
+              <>
+                <Ionicons name="checkmark-circle" size={22} color="#fff" />
+                <Text style={styles.confirmBtnText}>Confirmar Reserva</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </LinearGradient>
 
         <TouchableOpacity
           style={styles.cancelBtn}
@@ -354,6 +401,12 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.shadowWhiteLight,
     borderTopWidth: 1.5,
   },
+  tripCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   routeRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -366,19 +419,19 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: COLORS.primary,
+    backgroundColor: '#fff',
     marginBottom: SPACING.xs,
   },
   routeDotEnd: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: COLORS.accent,
+    backgroundColor: '#fff',
     marginBottom: SPACING.xs,
   },
   routeLabel: {
     ...TYPOGRAPHY.label,
-    color: COLORS.textSecondary,
+    color: 'rgba(255, 255, 255, 0.7)',
     marginBottom: 2,
   },
   routeText: {
@@ -387,10 +440,27 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   routeLine: {
+    position: 'absolute',
     flex: 1,
     height: 2,
-    backgroundColor: COLORS.borderLight,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    width: '100%',
+  },
+  routeLineContainer: {
+    flex: 1,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginHorizontal: SPACING.md,
+  },
+  carIconContainer: {
+    position: 'absolute',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: 12,
+    padding: SPACING.xs,
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    zIndex: 10,
   },
   divider: {
     height: 1,
@@ -424,6 +494,12 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
+  },
+  seatsCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   sectionTitle: {
     ...TYPOGRAPHY.label,
@@ -462,6 +538,12 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
+  },
+  passengerCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   passengerRow: {
     flexDirection: 'row',
@@ -503,6 +585,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     ...SHADOWS.sm,
   },
+  vehicleCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   vehicleRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -540,6 +628,12 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
     ...SHADOWS.sm,
+  },
+  paymentCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   paymentOption: {
     flexDirection: 'row',
@@ -595,6 +689,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
   },
+  priceCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   priceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -636,12 +736,24 @@ const styles = StyleSheet.create({
     borderLeftColor: COLORS.shadowWhiteDark,
     borderLeftWidth: 1,
   },
+  confirmBtnGradient: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  confirmBtnInner: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 10,
+  },
   confirmBtnDisabled: {
     opacity: 0.6,
   },
   confirmBtnText: {
     ...TYPOGRAPHY.bodyMedium,
-    color: COLORS.textInverse,
+    color: '#fff',
     fontWeight: '700',
   },
   cancelBtn: {

@@ -11,6 +11,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 
 const { width, height } = Dimensions.get('window')
@@ -219,6 +220,22 @@ export default function OnboardingScreen({ onComplete }: OnboardingScreenProps) 
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
+      {/* Fondo con círculos decorativos 3D */}
+      <View style={styles.bgContainer}>
+        <LinearGradient
+          colors={[COLORS.primaryLight + '32', COLORS.primary + '16', COLORS.primaryDark + '06']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle1]}
+        />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '25', COLORS.primary + '12', COLORS.primaryDark + '04']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle2]}
+        />
+      </View>
+
       {/* Header */}
       <View style={styles.header}>
         {/* Espaciador para centrar */}
@@ -307,6 +324,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+  },
+  // Fondo con círculos decorativos 3D
+  bgContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  gradientCircle: {
+    position: 'absolute',
+    borderRadius: 9999,
+  },
+  gradientCircle1: {
+    top: -120,
+    right: -100,
+    width: 320,
+    height: 320,
+  },
+  gradientCircle2: {
+    bottom: -100,
+    left: -100,
+    width: 300,
+    height: 300,
   },
   header: {
     flexDirection: 'row',

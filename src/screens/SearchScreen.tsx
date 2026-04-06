@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useRoutes, Route } from '../hooks/useRoutes'
 import { useAppStore } from '../store/useAppStore'
@@ -178,74 +179,109 @@ export default function SearchScreen() {
             {displayRoutes.map((route) => (
               <TouchableOpacity
                 key={route.id}
-                style={styles.routeCard}
+                style={styles.routeCardWrapper}
                 onPress={() => handleSelectRoute(route)}
                 activeOpacity={0.8}
               >
-                {/* Route Header */}
-                <View style={styles.routeCardHeader}>
-                  <View style={{ flex: 1 }}>
-                    <View style={styles.routePoints}>
-                      <Text style={styles.routeFrom}>{route.origin}</Text>
-                      <View style={styles.arrowContainer}>
-                        <Ionicons name="arrow-forward" size={14} color={COLORS.textTertiary} />
+                <LinearGradient
+                  colors={[COLORS.primary, COLORS.primary + 'CC']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.routeCardGradient}
+                >
+                  {/* Status Badge */}
+                  <View style={styles.routeCardBadge}>
+                    <Ionicons name="checkmark-circle" size={12} color="#fff" />
+                    <Text style={styles.routeCardBadgeText}>
+                      {route.available_seats > 0 ? 'Disponible' : 'Lleno'}
+                    </Text>
+                  </View>
+
+                  {/* Route Section */}
+                  <View style={styles.routeCardRouteSection}>
+                    <View style={styles.routeCardOrigin}>
+                      <View style={styles.routeCardLocationIcon}>
+                        <Ionicons name="location" size={18} color="#fff" />
                       </View>
-                      <Text style={styles.routeTo}>{route.destination}</Text>
+                      <View style={styles.routeCardLocationText}>
+                        <Text style={styles.routeCardLocationLabel}>SALIDA</Text>
+                        <Text style={styles.routeCardLocationName}>{route.origin}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.routeCardArrow}>
+                      <Ionicons name="arrow-forward" size={16} color="#fff" />
+                    </View>
+
+                    <View style={styles.routeCardDestination}>
+                      <View style={styles.routeCardLocationIcon}>
+                        <Ionicons name="location" size={18} color="#fff" />
+                      </View>
+                      <View style={styles.routeCardLocationText}>
+                        <Text style={styles.routeCardLocationLabel}>DESTINO</Text>
+                        <Text style={styles.routeCardLocationName}>{route.destination}</Text>
+                      </View>
                     </View>
                   </View>
-                  <Text style={styles.routePrice}>{formatPrice(route.price_per_seat)}</Text>
-                </View>
 
-                {/* Route Details */}
-                <View style={styles.routeDetails}>
-                  <View style={styles.detailItem}>
-                    <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.detailText}>
-                      {formatTime(route.departure_time, route.arrival_time)}
-                    </Text>
+                  {/* Footer with Details */}
+                  <View style={styles.routeCardFooterSection}>
+                    <View style={styles.routeCardFooterItem}>
+                      <Ionicons name="time-outline" size={14} color="#fff" />
+                      <Text style={styles.routeCardFooterText}>
+                        {formatTime(route.departure_time, route.arrival_time)}
+                      </Text>
+                    </View>
+                    <View style={styles.routeCardFooterDivider} />
+                    <View style={styles.routeCardFooterItem}>
+                      <Ionicons name="calendar-outline" size={14} color="#fff" />
+                      <Text style={styles.routeCardFooterText}>
+                        {new Date(route.departure_time).toLocaleDateString('es-CO', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </Text>
+                    </View>
+                    <View style={styles.routeCardFooterDivider} />
+                    <View style={styles.routeCardFooterItem}>
+                      <Ionicons name="cash-outline" size={14} color="#fff" />
+                      <Text style={styles.routeCardFooterText}>{formatPrice(route.price_per_seat)}</Text>
+                    </View>
                   </View>
-                  <View style={styles.detailDivider} />
-                  <View style={styles.detailItem}>
-                    <Ionicons name="calendar-outline" size={16} color={COLORS.textSecondary} />
-                    <Text style={styles.detailText}>
-                      {new Date(route.departure_time).toLocaleDateString('es-CO', {
-                        month: 'short',
-                        day: 'numeric'
-                      })}
-                    </Text>
-                  </View>
-                  <View style={styles.detailDivider} />
+                </LinearGradient>
+
+                {/* Availability Badge + CTA */}
+                <View style={styles.routeCardBottom}>
                   <View
                     style={[
-                      styles.seatsBadge,
+                      styles.routeCardAvailability,
                       route.available_seats === 0
-                        ? styles.seatsFull
+                        ? styles.availabilityFull
                         : route.available_seats <= 2
-                        ? styles.seatsLow
-                        : styles.seatsOk,
+                        ? styles.availabilityLow
+                        : styles.availabilityOk,
                     ]}
                   >
                     <Text
                       style={[
-                        styles.seatsText,
+                        styles.availabilityText,
                         route.available_seats === 0
-                          ? styles.seatsTextFull
+                          ? styles.availabilityTextFull
                           : route.available_seats <= 2
-                          ? styles.seatsTextLow
-                          : styles.seatsTextOk,
+                          ? styles.availabilityTextLow
+                          : styles.availabilityTextOk,
                       ]}
                     >
                       {route.available_seats === 0
-                        ? 'Lleno'
-                        : `${route.available_seats} ${route.available_seats === 1 ? 'puesto' : 'puestos'}`}
+                        ? '🔴 Lleno'
+                        : `🟢 ${route.available_seats} ${route.available_seats === 1 ? 'puesto' : 'puestos'}`}
                     </Text>
                   </View>
-                </View>
 
-                {/* CTA */}
-                <View style={styles.routeFooter}>
-                  <Text style={styles.ctaText}>Ver detalles</Text>
-                  <Ionicons name="chevron-forward" size={18} color={COLORS.primary} />
+                  <View style={styles.routeCardCTA}>
+                    <Text style={styles.routeCardCTAText}>Ver detalles</Text>
+                    <Ionicons name="chevron-forward" size={16} color={COLORS.primary} />
+                  </View>
                 </View>
               </TouchableOpacity>
             ))}
@@ -459,122 +495,213 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxxl,
   },
 
-  // Route Card
-  routeCard: {
-    backgroundColor: COLORS.surface + 'F5', // 96.1% opacidad
-    borderRadius: RADIUS.lg,
-    padding: SPACING.lg,
+  // Route Card - NEW GRADIENT STYLE
+  routeCardWrapper: {
     marginBottom: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight + 'B3', // Semi-transparente
-    ...SHADOWS.lg, // Sombra profunda
-    // Efecto de profundidad con luz blanca
-    borderTopColor: COLORS.shadowWhiteMid,
-    borderTopWidth: 1.5,
-    borderLeftColor: COLORS.shadowWhiteDark,
-    borderLeftWidth: 1,
+    borderRadius: RADIUS.xl,
+    overflow: 'hidden',
+    ...SHADOWS.md,
   },
-  routeCardHeader: {
+  routeCardGradient: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.lg,
+  },
+  routeCardBadge: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: SPACING.xs,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.full,
+    alignSelf: 'flex-start',
+    marginBottom: SPACING.md,
+  },
+  routeCardBadgeText: {
+    ...TYPOGRAPHY.label,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  routeCardRouteSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
     marginBottom: SPACING.lg,
   },
-  routePoints: {
+  routeCardOrigin: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.sm,
   },
-  routeFrom: {
-    ...TYPOGRAPHY.bodyMedium,
-    color: COLORS.textPrimary,
-    fontWeight: '600',
+  routeCardDestination: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
-  arrowContainer: {
-    width: 24,
-    height: 24,
-    borderRadius: RADIUS.sm,
-    backgroundColor: COLORS.background,
+  routeCardLocationIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  routeTo: {
-    ...TYPOGRAPHY.bodyMedium,
-    color: COLORS.primary,
-    fontWeight: '600',
+  routeCardLocationText: {
+    flex: 1,
   },
-  routePrice: {
-    ...TYPOGRAPHY.h4,
-    color: COLORS.accent,
+  routeCardLocationLabel: {
+    ...TYPOGRAPHY.label,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: SPACING.xs,
+  },
+  routeCardLocationName: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: '#fff',
     fontWeight: '700',
   },
-
-  // Route Details
-  routeDetails: {
+  routeCardArrow: {
+    paddingHorizontal: SPACING.sm,
+  },
+  routeCardFooterSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.md,
-    paddingVertical: SPACING.lg,
-    paddingBottom: SPACING.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
-    marginBottom: SPACING.lg,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.2)',
+    paddingTop: SPACING.md,
+    marginTop: SPACING.md,
   },
-  detailItem: {
+  routeCardFooterItem: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: SPACING.xs,
   },
-  detailText: {
-    ...TYPOGRAPHY.labelMedium,
-    color: COLORS.textSecondary,
+  routeCardFooterText: {
+    ...TYPOGRAPHY.label,
+    color: '#fff',
+    fontWeight: '600',
+    flex: 1,
   },
-  detailDivider: {
+  routeCardFooterDivider: {
     width: 1,
     height: 16,
-    backgroundColor: COLORS.borderLight,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginHorizontal: SPACING.md,
   },
-
-  // Seats Badge
-  seatsBadge: {
+  routeCardBottom: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+    padding: SPACING.md,
+    backgroundColor: COLORS.surface,
+    borderBottomLeftRadius: RADIUS.xl,
+    borderBottomRightRadius: RADIUS.xl,
+  },
+  routeCardAvailability: {
+    flex: 1,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.xs,
+    paddingVertical: SPACING.sm,
     borderRadius: RADIUS.md,
   },
-  seatsOk: {
-    backgroundColor: COLORS.success + '15',
+  availabilityOk: {
+    backgroundColor: COLORS.success + '20',
   },
-  seatsLow: {
-    backgroundColor: COLORS.warning + '15',
+  availabilityLow: {
+    backgroundColor: COLORS.warning + '20',
   },
-  seatsFull: {
-    backgroundColor: COLORS.borderLight,
+  availabilityFull: {
+    backgroundColor: COLORS.error + '20',
   },
-  seatsText: {
+  availabilityText: {
     ...TYPOGRAPHY.label,
     fontWeight: '600',
   },
-  seatsTextOk: {
+  availabilityTextOk: {
     color: COLORS.success,
   },
-  seatsTextLow: {
+  availabilityTextLow: {
     color: COLORS.warning,
   },
-  seatsTextFull: {
-    color: COLORS.textSecondary,
+  availabilityTextFull: {
+    color: COLORS.error,
   },
-
-  // Route Footer
-  routeFooter: {
+  routeCardCTA: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: SPACING.sm,
+    justifyContent: 'flex-end',
+    gap: SPACING.xs,
   },
-  ctaText: {
+  routeCardCTAText: {
     ...TYPOGRAPHY.bodyMedium,
     color: COLORS.primary,
     fontWeight: '600',
+  },
+
+  // Deprecated styles (kept for compatibility)
+  routeCard: {
+    display: 'none',
+  },
+  routeCardHeader: {
+    display: 'none',
+  },
+  routePoints: {
+    display: 'none',
+  },
+  routeFrom: {
+    display: 'none',
+  },
+  arrowContainer: {
+    display: 'none',
+  },
+  routeTo: {
+    display: 'none',
+  },
+  routePrice: {
+    display: 'none',
+  },
+  routeDetails: {
+    display: 'none',
+  },
+  detailItem: {
+    display: 'none',
+  },
+  detailText: {
+    display: 'none',
+  },
+  detailDivider: {
+    display: 'none',
+  },
+  seatsBadge: {
+    display: 'none',
+  },
+  seatsOk: {
+    display: 'none',
+  },
+  seatsLow: {
+    display: 'none',
+  },
+  seatsFull: {
+    display: 'none',
+  },
+  seatsText: {
+    display: 'none',
+  },
+  seatsTextOk: {
+    display: 'none',
+  },
+  seatsTextLow: {
+    display: 'none',
+  },
+  seatsTextFull: {
+    display: 'none',
+  },
+  routeFooter: {
+    display: 'none',
+  },
+  ctaText: {
+    display: 'none',
   },
 })

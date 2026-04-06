@@ -6,11 +6,18 @@ export const COLORS = {
   primary: '#154AA8', // Azul Tech vibrante con energía
   primaryLight: '#2E5FBF', // Azul claro para hover/light states
   primaryDark: '#0D3A88', // Azul oscuro para press states
-  
+  primaryDarkest: '#082D66', // Azul muy oscuro para gradientes 3D
+
   // Secundarios - Azul Cálido/Celeste
   accent: '#2E7DC0', // Azul cálido para acentos y complementos
   accentLight: '#5A9FD4', // Azul muy claro para backgrounds
   accentDark: '#1E5FA0', // Azul oscuro alternativo
+
+  // Gradientes 3D
+  gradient3D1: '#0D3A88', // Azul oscuro inicio
+  gradient3D2: '#154AA8', // Azul medio
+  gradient3D3: '#2E7DC0', // Azul claro final
+  gradient3D4: '#5A9FD4', // Azul muy claro
   
   // Premium - Azul y variantes azul premium
   gold: '#1E5FA0', // Azul premium sofisticado

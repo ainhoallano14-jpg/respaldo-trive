@@ -14,7 +14,7 @@ export interface Route {
   vehicle_make: string;
   vehicle_model: string;
   vehicle_year: number;
-  license_plate: string;
+  vehicle_plate: string;
   vehicle_color: string;
   description?: string;
   status: string;

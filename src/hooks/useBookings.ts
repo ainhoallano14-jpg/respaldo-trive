@@ -131,31 +131,48 @@ export const useBookings = () => {
       setError(null);
       setLoading(true);
 
-      const { data, error: updateError } = await supabase
+      // First, get the booking details BEFORE cancelling
+      const { data: bookingData, error: fetchError } = await supabase
+        .from("bookings")
+        .select("id, route_id")
+        .eq("id", bookingId)
+        .single();
+
+      if (fetchError) throw new Error("Reserva no encontrada");
+      if (!bookingData) throw new Error("Reserva no existe");
+
+      // Update booking status
+      const { error: updateError } = await supabase
         .from("bookings")
         .update({ booking_status: "cancelled", payment_status: "refunded" })
-        .eq("id", bookingId)
-        .select()
-        .single();
+        .eq("id", bookingId);
 
       if (updateError) throw updateError;
 
-      // Increment available_seats
-      // Get the route_id from booking
-      const { data: bookingData } = await supabase
-        .from("bookings")
-        .select("route_id")
-        .eq("id", bookingId)
-        .single();
-
-      if (bookingData) {
-        await supabase
+      // Increment available_seats for the route
+      if (bookingData.route_id) {
+        // Get current available_seats value
+        const { data: routeData, error: routeFetchError } = await supabase
           .from("routes")
-          .update({ available_seats: (prev: number) => prev + 1 })
-          .eq("id", bookingData.route_id);
+          .select("available_seats")
+          .eq("id", bookingData.route_id)
+          .single();
+
+        if (!routeFetchError && routeData) {
+          const newAvailableSeats = (routeData.available_seats || 0) + 1;
+          const { error: routeUpdateError } = await supabase
+            .from("routes")
+            .update({ available_seats: newAvailableSeats })
+            .eq("id", bookingData.route_id);
+
+          if (routeUpdateError) {
+            console.warn("Error incrementing available seats:", routeUpdateError);
+            // Don't throw - the booking was already cancelled
+          }
+        }
       }
 
-      return data;
+      return bookingData;
     } catch (err: any) {
       const message = err.message || "Error cancelling booking";
       setError(message);

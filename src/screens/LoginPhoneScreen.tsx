@@ -17,6 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useAppStore } from '../store/useAppStore'
 import { useAuth } from '../hooks/useAuth'
@@ -152,10 +153,27 @@ export default function LoginPhoneScreen() {
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="dark-content" backgroundColor={COLORS.background} />
 
-      {/* Background decorative circles (same as HomeScreen) */}
-      <View style={styles.bgCircle1} />
-      <View style={styles.bgCircle2} />
-      <View style={styles.bgCircle3} />
+      {/* Background decorative circles 3D */}
+      <View style={styles.bgContainer}>
+        <LinearGradient
+          colors={[COLORS.primaryLight + '35', COLORS.primary + '18', COLORS.primaryDark + '08']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle1]}
+        />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '28', COLORS.primary + '14', COLORS.primaryDark + '06']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle2]}
+        />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '22', COLORS.primary + '12', COLORS.primaryDark + '04']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle3]}
+        />
+      </View>
 
       <KeyboardAvoidingView
         style={styles.container}
@@ -337,36 +355,35 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.xxxl,
   },
 
-  // Background decorative circles (same as HomeScreen)
-  bgCircle1: {
+  // Background decorative circles 3D
+  bgContainer: {
     position: 'absolute',
-    top: -80,
-    right: -60,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: COLORS.primary,
-    opacity: 0.25,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
-  bgCircle2: {
+  gradientCircle: {
     position: 'absolute',
-    top: 300,
-    left: -100,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: COLORS.primary,
-    opacity: 0.2,
+    borderRadius: 9999,
   },
-  bgCircle3: {
-    position: 'absolute',
-    bottom: 100,
+  gradientCircle1: {
+    top: -100,
     right: -80,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: COLORS.primary,
-    opacity: 0.22,
+    width: 260,
+    height: 260,
+  },
+  gradientCircle2: {
+    top: 320,
+    left: -120,
+    width: 320,
+    height: 320,
+  },
+  gradientCircle3: {
+    bottom: 60,
+    right: -100,
+    width: 240,
+    height: 240,
   },
 
   // Header

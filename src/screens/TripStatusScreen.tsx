@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator, Modal, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useAppStore } from '../store/useAppStore'
 import { useBookings } from '../hooks/useBookings'
+import Toast from '../components/Toast'
 
 export default function TripStatusScreen() {
   const navigation = useNavigation()
-  const { selectedRoute, selectedSeat } = useAppStore()
-  const { getRouteBookings, loading } = useBookings()
+  const { selectedRoute, selectedSeat, user } = useAppStore()
+  const { getRouteBookings, loading, cancelBooking } = useBookings()
   const [bookings, setBookings] = useState<any[]>([])
+  const [cancelLoading, setCancelLoading] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [toastConfig, setToastConfig] = useState({ visible: false, message: '', type: 'info' as const })
+  const [userBooking, setUserBooking] = useState<any>(null)
 
   useEffect(() => {
     if (!selectedRoute) {
@@ -49,6 +55,42 @@ export default function TripStatusScreen() {
 
   const driverInitial = selectedRoute.driver_name?.charAt(0).toUpperCase() || 'C'
 
+  const handleCancelBooking = () => {
+    if (!user) {
+      setToastConfig({ visible: true, message: 'Debes iniciar sesión primero', type: 'error' })
+      return
+    }
+
+    // Find user's booking
+    const booking = bookings.find(b => b.passenger_id === user.id)
+    if (!booking) {
+      setToastConfig({ visible: true, message: 'No se encontró tu reserva', type: 'error' })
+      return
+    }
+
+    setUserBooking(booking)
+    setShowConfirmModal(true)
+  }
+
+  const confirmCancel = async () => {
+    if (!userBooking) return
+
+    try {
+      setCancelLoading(true)
+      setShowConfirmModal(false)
+      await cancelBooking(userBooking.id)
+      setToastConfig({ visible: true, message: '✓ Reserva cancelada exitosamente', type: 'success' })
+      setTimeout(() => {
+        navigation.navigate('Main' as never, { screen: 'Home' } as never)
+      }, 2000)
+    } catch (error) {
+      setToastConfig({ visible: true, message: 'Error al cancelar. Intenta más tarde.', type: 'error' })
+      console.log('Cancel error:', error)
+    } finally {
+      setCancelLoading(false)
+    }
+  }
+
   // Generate all seat statuses
   const occupiedSeatNumbers = new Set(bookings.map((b: any) => b.seat_number))
   const allSeats = Array.from({ length: totalSeats }, (_, i) => ({
@@ -73,7 +115,7 @@ export default function TripStatusScreen() {
           </View>
           <TouchableOpacity
             style={styles.homeBtn}
-            onPress={() => navigation.navigate('Home' as never)}
+            onPress={() => navigation.navigate('Main' as never, { screen: 'Home' } as never)}
           >
             <Ionicons name="home" size={20} color={COLORS.primary} />
           </TouchableOpacity>
@@ -86,34 +128,44 @@ export default function TripStatusScreen() {
         ) : (
           <>
             {/* Status Card */}
-            <View style={styles.statusCard}>
+            <LinearGradient
+              colors={[COLORS.primary + 'F5', COLORS.primary + 'A0']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.statusCardGradient}
+            >
               <View style={styles.statusHeader}>
-                <View style={styles.statusBadge}>
-                  <Ionicons name="time" size={14} color={COLORS.primary} />
-                  <Text style={styles.statusBadgeText}>En espera</Text>
+                <View style={[styles.statusBadge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
+                  <Ionicons name="time" size={14} color="#fff" />
+                  <Text style={[styles.statusBadgeText, { color: '#fff' }]}>En espera</Text>
                 </View>
-                <Text style={styles.tripTime}>Salida en 15 min</Text>
+                <Text style={[styles.tripTime, { color: 'rgba(255,255,255,0.8)' }]}>Salida en 15 min</Text>
               </View>
 
               <View style={styles.routeDisplay}>
                 <View style={styles.routePoint}>
-                  <View style={styles.routeDotLarge} />
-                  <Text style={styles.routeCity}>{selectedRoute.origin}</Text>
+                  <View style={[styles.routeDotLarge, { backgroundColor: '#fff' }]} />
+                  <Text style={[styles.routeCity, { color: '#fff' }]}>{selectedRoute.origin}</Text>
                 </View>
                 <View style={styles.routeArrow}>
-                  <View style={styles.routeLine} />
-                  <Ionicons name="airplane" size={16} color={COLORS.primary} />
-                  <View style={styles.routeLine} />
+                  <View style={[styles.routeLine, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+                  <Ionicons name="car" size={16} color="#fff" />
+                  <View style={[styles.routeLine, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
                 </View>
                 <View style={styles.routePoint}>
-                  <View style={[styles.routeDotLarge, styles.routeDotEnd]} />
-                  <Text style={styles.routeCity}>{selectedRoute.destination}</Text>
+                  <View style={[styles.routeDotLarge, styles.routeDotEnd, { backgroundColor: '#fff' }]} />
+                  <Text style={[styles.routeCity, { color: '#fff' }]}>{selectedRoute.destination}</Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
             {/* Seats Card */}
-            <View style={styles.seatsCard}>
+            <LinearGradient
+              colors={['#FFFFFF', COLORS.primary + '1A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.seatsCardGradient}
+            >
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Cupos del vehículo</Text>
                 <Text style={styles.seatsSubtitle}>
@@ -165,19 +217,35 @@ export default function TripStatusScreen() {
                   <Text style={styles.progressText}>{availableSeats} disponibles</Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
             {/* Vehicle Card */}
-            <View style={styles.vehicleCard}>
-              <View style={styles.vehicleHeader}>
-                <View>
+            <LinearGradient
+              colors={['#FFFFFF', COLORS.primary + '12']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.vehicleCardGradient}
+            >
+              <View style={[styles.vehicleHeader, { flexDirection: 'row', alignItems: 'flex-start', gap: SPACING.md, marginBottom: SPACING.sm }]}>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.vehicleName}>{selectedRoute.vehicle_model || 'Vehículo'}</Text>
                   <Text style={styles.vehicleDetails}>
                     {selectedRoute.license_plate} · {selectedRoute.vehicle_color}
                   </Text>
                 </View>
-                <View style={styles.vehicleBadge}>
-                  <Ionicons name="car" size={20} color={COLORS.primary} />
+
+                <View style={styles.vehicleRightSection}>
+                  <View style={styles.vehicleBadge}>
+                    <Ionicons name="car" size={20} color={COLORS.primary} />
+                  </View>
+                  <View style={styles.actionButtonsColumn}>
+                    <TouchableOpacity style={styles.callBtn}>
+                      <Ionicons name="call" size={16} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.messageBtn}>
+                      <Ionicons name="chatbubble" size={16} color={COLORS.primary} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
 
@@ -193,17 +261,16 @@ export default function TripStatusScreen() {
                     <Text style={styles.ratingLabel}> ·conductor verificado</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.callBtn}>
-                  <Ionicons name="call" size={18} color="#fff" />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.messageBtn}>
-                  <Ionicons name="chatbubble" size={18} color={COLORS.primary} />
-                </TouchableOpacity>
               </View>
-            </View>
+            </LinearGradient>
 
             {/* Trip Info Card */}
-            <View style={styles.tripInfoCard}>
+            <LinearGradient
+              colors={['#FFFFFF', COLORS.primary + '0D']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.tripInfoCardGradient}
+            >
               <View style={styles.infoRow}>
                 <View style={styles.infoItem}>
                   <Ionicons name="time-outline" size={20} color={COLORS.textSecondary} />
@@ -223,22 +290,83 @@ export default function TripStatusScreen() {
                   <Text style={styles.infoValue}>{departureDate}</Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
             {/* Action Buttons */}
-            <TouchableOpacity
-              style={styles.newTripBtn}
-              onPress={() => navigation.navigate('Search' as never)}
-              activeOpacity={0.8}
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primary + 'E0']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.newTripBtnGradient}
             >
-              <Ionicons name="search" size={20} color={COLORS.primary} />
-              <Text style={styles.newTripBtnText}>Buscar nuevas rutas</Text>
+              <TouchableOpacity
+                style={styles.newTripBtnInner}
+                onPress={() => navigation.navigate('Main' as never, { screen: 'Search' } as never)}
+                activeOpacity={0.8}
+              >
+                <Ionicons name="search" size={20} color="#fff" />
+                <Text style={styles.newTripBtnText}>Buscar nuevas rutas</Text>
+              </TouchableOpacity>
+            </LinearGradient>
+
+            <TouchableOpacity 
+              style={[styles.cancelBtn, cancelLoading && { opacity: 0.6 }]}
+              onPress={handleCancelBooking}
+              disabled={cancelLoading}
+            >
+              <Ionicons name="close-circle-outline" size={20} color={COLORS.error} />
+              <Text style={styles.cancelBtnText}>
+                {cancelLoading ? 'Cancelando...' : 'Cancelar Reserva'}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.cancelBtn}>
-              <Ionicons name="close-circle-outline" size={20} color={COLORS.error} />
-              <Text style={styles.cancelBtnText}>Cancelar Reserva</Text>
-            </TouchableOpacity>
+            {/* Confirmation Modal */}
+            <Modal
+              visible={showConfirmModal}
+              transparent
+              animationType="fade"
+              onRequestClose={() => setShowConfirmModal(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                  <View style={styles.modalHeader}>
+                    <Ionicons name="warning" size={32} color={COLORS.error} />
+                  </View>
+                  <Text style={styles.modalTitle}>Cancelar Reserva</Text>
+                  <Text style={styles.modalMessage}>
+                    ¿Estás seguro? Se procesará un reembolso completo a tu cuenta.
+                  </Text>
+
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      style={[styles.modalBtn, styles.modalBtnCancel]}
+                      onPress={() => setShowConfirmModal(false)}
+                      disabled={cancelLoading}
+                    >
+                      <Text style={styles.modalBtnTextCancel}>Mantener</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalBtn, styles.modalBtnConfirm, cancelLoading && { opacity: 0.6 }]}
+                      onPress={confirmCancel}
+                      disabled={cancelLoading}
+                    >
+                      <Text style={styles.modalBtnTextConfirm}>
+                        {cancelLoading ? 'Procesando...' : 'Cancelar Reserva'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
+
+            {/* Toast */}
+            <Toast
+              visible={toastConfig.visible}
+              message={toastConfig.message}
+              type={toastConfig.type as any}
+              onHide={() => setToastConfig({ ...toastConfig, visible: false })}
+              duration={toastConfig.type === 'error' ? 4000 : 3000}
+            />
           </>
         )}
       </ScrollView>
@@ -311,6 +439,12 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.shadowWhiteLight,
     borderTopWidth: 1.5,
   },
+  statusCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   statusHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -378,6 +512,12 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
+  },
+  seatsCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -468,11 +608,23 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
   },
+  vehicleCardGradient: {
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    overflow: 'hidden',
+    flexDirection: 'column',
+  },
   vehicleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: SPACING.lg,
+    marginBottom: SPACING.md,
+  },
+  vehicleRightSection: {
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: SPACING.sm,
   },
   vehicleName: {
     ...TYPOGRAPHY.bodyMedium,
@@ -494,7 +646,11 @@ const styles = StyleSheet.create({
   },
   driverRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: SPACING.sm,
+    paddingTop: SPACING.sm,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.primary + '20',
   },
   driverAvatar: {
     width: 48,
@@ -511,44 +667,48 @@ const styles = StyleSheet.create({
   },
   driverInfo: {
     flex: 1,
-    marginLeft: SPACING.md,
   },
   driverName: {
-    ...TYPOGRAPHY.bodyMedium,
+    ...TYPOGRAPHY.bodySmall,
     color: COLORS.textPrimary,
     fontWeight: '600',
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 2,
+    marginTop: 1,
+    flexWrap: 'wrap',
   },
   ratingText: {
-    ...TYPOGRAPHY.labelMedium,
+    ...TYPOGRAPHY.label,
     color: COLORS.accent,
     fontWeight: '600',
-    marginLeft: 4,
+    marginLeft: 2,
   },
   ratingLabel: {
     ...TYPOGRAPHY.label,
     color: COLORS.textSecondary,
+    fontSize: 10,
+  },
+  actionButtonsColumn: {
+    flexDirection: 'column',
+    gap: SPACING.xs,
   },
   callBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: COLORS.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
   messageBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: COLORS.primary + '15',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: SPACING.sm,
   },
 
   // Trip Info Card
@@ -558,6 +718,12 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.xl,
     ...SHADOWS.sm,
+  },
+  tripInfoCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 32,
+    overflow: 'hidden',
   },
   infoRow: {
     flexDirection: 'row',
@@ -597,9 +763,21 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary,
     ...SHADOWS.sm,
   },
+  newTripBtnGradient: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  newTripBtnInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 10,
+  },
   newTripBtnText: {
     ...TYPOGRAPHY.bodyMedium,
-    color: COLORS.primary,
+    color: '#fff',
     fontWeight: '700',
   },
   cancelBtn: {
@@ -612,6 +790,69 @@ const styles = StyleSheet.create({
   cancelBtnText: {
     ...TYPOGRAPHY.body,
     color: COLORS.error,
+    fontWeight: '600',
+  },
+
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.xl,
+    padding: SPACING.lg,
+    ...SHADOWS.lg,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    marginBottom: SPACING.lg,
+  },
+  modalTitle: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.textPrimary,
+    fontWeight: '700',
+    marginBottom: SPACING.sm,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: COLORS.textSecondary,
+    textAlign: 'center',
+    marginBottom: SPACING.xl,
+    lineHeight: 22,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: SPACING.md,
+    width: '100%',
+  },
+  modalBtn: {
+    flex: 1,
+    height: 44,
+    borderRadius: RADIUS.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBtnCancel: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+  },
+  modalBtnConfirm: {
+    backgroundColor: COLORS.error,
+  },
+  modalBtnTextCancel: {
+    ...TYPOGRAPHY.labelMedium,
+    color: COLORS.textPrimary,
+    fontWeight: '600',
+  },
+  modalBtnTextConfirm: {
+    ...TYPOGRAPHY.labelMedium,
+    color: '#fff',
     fontWeight: '600',
   },
 })

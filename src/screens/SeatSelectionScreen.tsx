@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useAppStore } from '../store/useAppStore'
 import { useBookings } from '../hooks/useBookings'
@@ -128,8 +129,13 @@ export default function SeatSelectionScreen() {
           </View>
         ) : (
           <>
-            {/* Vehicle Card */}
-            <View style={styles.vehicleCard}>
+            {/* Vehicle Card - Gradient */}
+            <LinearGradient
+              colors={['#FFFFFF', COLORS.primary + '1A']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.vehicleCardGradient}
+            >
               <View style={styles.vehicleHeader}>
                 <View>
                   <Text style={styles.vehicleName}>{selectedRoute.vehicle_make || 'Vehículo'}</Text>
@@ -138,31 +144,31 @@ export default function SeatSelectionScreen() {
                   </Text>
                 </View>
                 <View style={styles.plateBadge}>
-                  <Text style={styles.plateText}>{selectedRoute.license_plate || '---'}</Text>
+                  <Text style={styles.plateText}>{selectedRoute.vehicle_plate || '---'}</Text>
                 </View>
               </View>
 
-              {/* Seats Grid */}
+              {/* Seats Grid - Real Car Layout */}
               <View style={styles.seatsSection}>
-                {/* Driver seat */}
-                <View style={styles.driverSeatRow}>
+                {/* FRONT ROW: Driver + Copiloto (Seat 1) */}
+                <View style={styles.frontRow}>
+                  {/* Driver seat */}
                   <View style={styles.driverSeat}>
                     <Ionicons name="person" size={20} color={COLORS.textTertiary} />
                     <Text style={styles.driverLabel}>Chofer</Text>
                   </View>
-                </View>
 
-                {/* Passenger seats */}
-                <View style={styles.seatsGrid}>
-                  {seatsArray.map((seat) => {
+                  {/* Copiloto - Seat 1 */}
+                  {seatsArray.length > 0 && (() => {
+                    const seat = seatsArray[0]
                     const isSelected = selectedSeats.includes(seat.id)
                     const isOccupied = !seat.available
 
                     return (
                       <TouchableOpacity
-                        key={seat.id}
                         style={[
                           styles.seat,
+                          styles.seatFront,
                           isOccupied && styles.seatOccupied,
                           isSelected && styles.seatSelected,
                         ]}
@@ -186,8 +192,47 @@ export default function SeatSelectionScreen() {
                         )}
                       </TouchableOpacity>
                     )
-                  })}
+                  })()}
                 </View>
+
+                {/* BACK ROW: Seats 2, 3, 4+ */}
+                {seatsArray.length > 1 && (
+                  <View style={styles.backRow}>
+                    {seatsArray.slice(1).map((seat) => {
+                      const isSelected = selectedSeats.includes(seat.id)
+                      const isOccupied = !seat.available
+
+                      return (
+                        <TouchableOpacity
+                          key={seat.id}
+                          style={[
+                            styles.seat,
+                            isOccupied && styles.seatOccupied,
+                            isSelected && styles.seatSelected,
+                          ]}
+                          disabled={isOccupied}
+                          onPress={() => toggleSeat(seat.id)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.seatText,
+                              isOccupied && styles.seatTextOccupied,
+                              isSelected && styles.seatTextSelected,
+                            ]}
+                          >
+                            {seat.id}
+                          </Text>
+                          {isOccupied && (
+                            <View style={styles.occupiedOverlay}>
+                              <Ionicons name="close" size={14} color={COLORS.textTertiary} />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      )
+                    })}
+                  </View>
+                )}
 
                 {/* Legend */}
                 <View style={styles.legend}>
@@ -205,37 +250,68 @@ export default function SeatSelectionScreen() {
                   </View>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
-            {/* Selected Seats Counter */}
-            <View style={[styles.selectionCard, selectedSeats.length > 0 && styles.selectionCardActive]}>
+            {/* Selected Seats Counter - Gradient */}
+            <LinearGradient
+              colors={[
+                selectedSeats.length > 0 ? COLORS.primary : COLORS.surface,
+                selectedSeats.length > 0 ? COLORS.primary + 'E0' : COLORS.surface,
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[
+                styles.selectionCardGradient,
+                selectedSeats.length > 0 && styles.selectionCardGradientActive,
+              ]}
+            >
               <View style={styles.selectionInfo}>
-                <View style={[styles.selectionIcon, selectedSeats.length > 0 && styles.selectionIconActive]}>
+                <View
+                  style={[
+                    styles.selectionIcon,
+                    selectedSeats.length > 0 && styles.selectionIconActive,
+                  ]}
+                >
                   <Ionicons
                     name={selectedSeats.length > 0 ? 'checkmark' : 'information-circle'}
                     size={20}
                     color={selectedSeats.length > 0 ? '#fff' : COLORS.textSecondary}
                   />
                 </View>
-                <View>
-                  <Text style={[styles.selectionTitle, selectedSeats.length > 0 && styles.selectionTitleActive]}>
+                <View style={{ flex: 1 }}>
+                  <Text
+                    style={[
+                      styles.selectionTitle,
+                      selectedSeats.length > 0 && styles.selectionTitleActive,
+                    ]}
+                  >
                     {selectedSeats.length === 0
                       ? 'Sin asientos seleccionados'
                       : selectedSeats.length === 1
                       ? '1 asiento seleccionado'
                       : `${selectedSeats.length} asientos seleccionados`}
                   </Text>
-                  <Text style={styles.selectionSubtitle}>
+                  <Text
+                    style={[
+                      styles.selectionSubtitle,
+                      selectedSeats.length > 0 && styles.selectionSubtitleActive,
+                    ]}
+                  >
                     {selectedSeats.length > 0
                       ? `Asientos: ${selectedSeats.join(', ')}`
                       : 'Toca los asientos disponibles'}
                   </Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
-            {/* Trip Card */}
-            <View style={styles.tripCard}>
+            {/* Trip Card - Gradient */}
+            <LinearGradient
+              colors={[COLORS.primary + 'F5', COLORS.primary + 'A0']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.tripCardGradient}
+            >
               <View style={styles.routeRow}>
                 <View style={styles.routePoint}>
                   <View style={styles.routeDotStart} />
@@ -250,24 +326,29 @@ export default function SeatSelectionScreen() {
 
               <View style={styles.tripInfo}>
                 <View style={styles.infoItem}>
-                  <Ionicons name="time-outline" size={18} color={COLORS.textSecondary} />
-                  <Text style={styles.infoText}>{departureTime}</Text>
+                  <Ionicons name="time-outline" size={18} color={COLORS.textInverse} />
+                  <Text style={[styles.infoText, { color: COLORS.textInverse }]}>{departureTime}</Text>
                 </View>
                 <View style={styles.infoItem}>
-                  <Ionicons name="cash-outline" size={18} color={COLORS.textSecondary} />
-                  <Text style={styles.infoText}>
+                  <Ionicons name="cash-outline" size={18} color={COLORS.textInverse} />
+                  <Text style={[styles.infoText, { color: COLORS.textInverse }]}>
                     ${selectedRoute.price_per_seat.toLocaleString('es-CO')} / asiento
                   </Text>
                 </View>
                 <View style={styles.infoItem}>
-                  <Ionicons name="calendar-outline" size={18} color={COLORS.textSecondary} />
-                  <Text style={styles.infoText}>{formattedDate}</Text>
+                  <Ionicons name="calendar-outline" size={18} color={COLORS.textInverse} />
+                  <Text style={[styles.infoText, { color: COLORS.textInverse }]}>{formattedDate}</Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
-            {/* Driver Card */}
-            <View style={styles.driverCard}>
+            {/* Driver Card - Gradient */}
+            <LinearGradient
+              colors={['#FFFFFF', COLORS.primary + '12']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.driverCardGradient}
+            >
               <View style={styles.driverHeader}>
                 <View style={styles.driverAvatar}>
                   <Text style={styles.driverInitial}>{driverInitial}</Text>
@@ -281,10 +362,15 @@ export default function SeatSelectionScreen() {
                   </View>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
 
-            {/* Summary */}
-            <View style={styles.summaryCard}>
+            {/* Summary - Gradient */}
+            <LinearGradient
+              colors={['#FFFFFF', COLORS.primary + '10']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.summaryCardGradient}
+            >
               <View style={styles.summaryRow}>
                 <Text style={styles.summaryLabel}>Asientos disponibles</Text>
                 <Text style={styles.summaryValue}>{availableSeatsCount} de {totalSeats}</Text>
@@ -296,35 +382,48 @@ export default function SeatSelectionScreen() {
                     <Text style={styles.summaryLabel}>
                       Asientos ({selectedSeats.length} × ${selectedRoute.price_per_seat.toLocaleString('es-CO')})
                     </Text>
-                    <Text style={styles.summaryValue}>
+                    <Text style={styles.summaryPrice}>
                       ${(selectedSeats.length * selectedRoute.price_per_seat).toLocaleString('es-CO')}
                     </Text>
                   </View>
                 </>
               )}
-            </View>
+            </LinearGradient>
 
-            {/* Continue Button */}
-            <TouchableOpacity
-              style={[
-                styles.continueBtn,
-                selectedSeats.length === 0 && styles.continueBtnDisabled,
-              ]}
-              disabled={selectedSeats.length === 0}
-              onPress={handleContinue}
-              activeOpacity={0.8}
+            {/* Continue Button - Gradient */}
+            <LinearGradient
+              colors={
+                selectedSeats.length === 0
+                  ? [COLORS.borderLight, COLORS.borderLight]
+                  : [COLORS.primary, COLORS.primary + 'E0']
+              }
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.continueBtnGradient}
             >
-              <Ionicons
-                name={selectedSeats.length === 0 ? 'chair-outline' : 'arrow-forward'}
-                size={20}
-                color={selectedSeats.length === 0 ? COLORS.textSecondary : COLORS.textInverse}
-              />
-              <Text style={[styles.continueBtnText, selectedSeats.length === 0 && styles.continueBtnTextDisabled]}>
-                {selectedSeats.length === 0
-                  ? 'Selecciona tus asientos'
-                  : `Continuar - $${(selectedSeats.length * selectedRoute.price_per_seat).toLocaleString('es-CO')}`}
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.continueBtnInner}
+                disabled={selectedSeats.length === 0}
+                onPress={handleContinue}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name={selectedSeats.length === 0 ? 'alert-circle' : 'arrow-forward'}
+                  size={20}
+                  color={selectedSeats.length === 0 ? COLORS.textSecondary : '#fff'}
+                />
+                <Text
+                  style={[
+                    styles.continueBtnText,
+                    selectedSeats.length === 0 && styles.continueBtnTextDisabled,
+                  ]}
+                >
+                  {selectedSeats.length === 0
+                    ? 'Selecciona tus asientos'
+                    : `Continuar - $${(selectedSeats.length * selectedRoute.price_per_seat).toLocaleString('es-CO')}`}
+                </Text>
+              </TouchableOpacity>
+            </LinearGradient>
           </>
         )}
       </ScrollView>
@@ -391,6 +490,12 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.shadowWhiteLight,
     borderTopWidth: 1.5,
   },
+  vehicleCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   vehicleHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -422,6 +527,29 @@ const styles = StyleSheet.create({
   seatsSection: {
     alignItems: 'center',
   },
+
+  // Front Row: Driver + Copiloto
+  frontRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+
+  // Back Row: Passenger seats
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.md,
+    marginBottom: SPACING.lg,
+  },
+
+  seatFront: {
+    // Same as seat, no additional styling needed
+  },
+
   driverSeatRow: {
     marginBottom: SPACING.lg,
   },
@@ -513,6 +641,15 @@ const styles = StyleSheet.create({
   selectionCardActive: {
     borderLeftColor: COLORS.success,
   },
+  selectionCardGradient: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
+  selectionCardGradientActive: {
+    opacity: 1,
+  },
   selectionInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -550,6 +687,12 @@ const styles = StyleSheet.create({
     padding: SPACING.lg,
     marginBottom: SPACING.lg,
     ...SHADOWS.md,
+  },
+  tripCardGradient: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   routeRow: {
     flexDirection: 'row',
@@ -611,6 +754,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     ...SHADOWS.sm,
   },
+  driverCardGradient: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   driverHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -661,6 +810,12 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg,
     ...SHADOWS.sm,
   },
+  summaryCardGradient: {
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    overflow: 'hidden',
+  },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -680,6 +835,11 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontWeight: '600',
   },
+  summaryPrice: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: COLORS.primary,
+  },
 
   // Continue Button
   continueBtn: {
@@ -695,6 +855,18 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     borderLeftColor: COLORS.shadowWhiteDark,
     borderLeftWidth: 1,
+  },
+  continueBtnGradient: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginBottom: 16,
+  },
+  continueBtnInner: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 14,
+    gap: 10,
   },
   continueBtnDisabled: {
     backgroundColor: COLORS.surfaceAlt,

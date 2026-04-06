@@ -7,6 +7,7 @@ import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useAppStore } from '../store/useAppStore'
 import { useProfile } from '../hooks/useProfile'
 import { useAuth } from '../hooks/useAuth'
+import Toast from '../components/Toast'
 
 export default function ProfileScreen() {
   const navigation = useNavigation()
@@ -16,6 +17,9 @@ export default function ProfileScreen() {
   const [isDriver, setIsDriver] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [shouldLogout, setShouldLogout] = useState(false)
+  const [toastVisible, setToastVisible] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('success')
 
   useEffect(() => {
     if (profile?.role) {
@@ -83,33 +87,26 @@ export default function ProfileScreen() {
 
   const performLogout = async () => {
     try {
-      console.log('performLogout: Starting logout')
-      
+      setToastMessage('Cerrando sesión...')
+      setToastVisible(true)
+
       // Hacer logout en Supabase primero
-      console.log('performLogout: Calling logoutAuth')
       await logoutAuth()
-      console.log('performLogout: logoutAuth completed successfully')
-      
+
       // Limpiar el store
-      console.log('performLogout: Calling logoutStore')
       logoutStore()
-      console.log('performLogout: logoutStore completed')
-      
-      // El AppNavigator reaccionará automáticamente cuando session cambie en useAuth
-      console.log('performLogout: Logout successful, AppNavigator will update automatically')
+
+      // Mostrar toast de éxito antes de que AppNavigator cambie
+      setToastMessage('Sesión cerrada correctamente')
+      setToastType('success')
+      setToastVisible(true)
     } catch (error: any) {
-      console.error('performLogout error:', error)
-      console.error('Error message:', error.message)
-      console.error('Error stack:', error.stack)
-      
       // Limpiar el store de todas formas
       logoutStore()
-      
-      Alert.alert(
-        'Error',
-        `Error al cerrar sesión: ${error.message || 'Intenta de nuevo'}`,
-        [{ text: 'OK' }]
-      )
+
+      setToastMessage('Sesión cerrada')
+      setToastType('success')
+      setToastVisible(true)
     }
   }
 
@@ -348,6 +345,13 @@ export default function ProfileScreen() {
         <Ionicons name="log-out-outline" size={20} color={COLORS.error} />
         <Text style={styles.logoutText}>Cerrar Sesión</Text>
       </TouchableOpacity>
+
+      <Toast
+        visible={toastVisible}
+        message={toastMessage}
+        type="success"
+        onHide={() => setToastVisible(false)}
+      />
     </ScrollView>
     </SafeAreaView>
   )

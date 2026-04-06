@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useAppStore } from '../store/useAppStore'
 import { useNotifications } from '../hooks/useNotifications'
@@ -132,10 +133,20 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
-      {/* Fondo con círculos decorativos */}
-      <View style={styles.gradientBg}>
-        <View style={styles.gradientCircle1} />
-        <View style={styles.gradientCircle2} />
+      {/* Fondo con círculos decorativos 3D */}
+      <View style={styles.bgContainer}>
+        <LinearGradient
+          colors={[COLORS.primaryLight + '32', COLORS.primary + '16', COLORS.primaryDark + '06']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle1]}
+        />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '25', COLORS.primary + '12', COLORS.primaryDark + '04']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle2]}
+        />
       </View>
 
       {/* Header */}
@@ -191,33 +202,29 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  // Fondo con círculos
-  gradientBg: {
+  // Fondo con círculos decorativos 3D
+  bgContainer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
   },
-  gradientCircle1: {
+  gradientCircle: {
     position: 'absolute',
-    top: -80,
-    right: -60,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: COLORS.primary,
-    opacity: 0.1,
+    borderRadius: 9999,
   },
-  gradientCircle2: {
-    position: 'absolute',
-    top: 100,
-    left: -80,
+  gradientCircle1: {
+    top: -100,
+    right: -80,
     width: 280,
     height: 280,
-    borderRadius: 140,
-    backgroundColor: COLORS.primary,
-    opacity: 0.08,
+  },
+  gradientCircle2: {
+    top: 150,
+    left: -100,
+    width: 340,
+    height: 340,
   },
 
   // Header

@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import { LinearGradient } from 'expo-linear-gradient'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 import { useState } from 'react'
 import { useAppStore } from '../store/useAppStore'
@@ -34,11 +35,26 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
-      {/* Fondo con círculos decorativos */}
+      {/* Fondo con círculos decorativos 3D */}
       <View style={styles.gradientBg}>
-        <View style={styles.gradientCircle1} />
-        <View style={styles.gradientCircle2} />
-        <View style={styles.gradientCircle3} />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '35', COLORS.primary + '18', COLORS.primaryDark + '08']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle1]}
+        />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '28', COLORS.primary + '14', COLORS.primaryDark + '06']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle2]}
+        />
+        <LinearGradient
+          colors={[COLORS.primaryLight + '22', COLORS.primary + '12', COLORS.primaryDark + '04']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gradientCircle, styles.gradientCircle3]}
+        />
       </View>
 
       <ScrollView
@@ -136,7 +152,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={[styles.searchBtn, !destination && styles.searchBtnDisabled]}
             disabled={!destination}
-            onPress={() => navigation.navigate('Search' as never)}
+            onPress={() => navigation.navigate('Main' as never, { screen: 'Search' } as never)}
             activeOpacity={0.85}
           >
             <Ionicons name="search" size={20} color={destination ? COLORS.textInverse : COLORS.textSecondary} />
@@ -194,9 +210,9 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('ScheduledTrips' as never)}
           >
             <View style={[styles.quickActionIcon, { backgroundColor: COLORS.primary + '20' }]}>
-              <Ionicons name="time-outline" size={18} color={COLORS.primary} />
+              <Ionicons name="calendar-check" size={18} color={COLORS.primary} />
             </View>
-            <Text style={styles.quickActionText} numberOfLines={1}>Programar</Text>
+            <Text style={styles.quickActionText} numberOfLines={1}>Mis viajes</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.quickActionItem}
@@ -231,113 +247,125 @@ export default function HomeScreen() {
         <View style={styles.routesSection}>
           <View style={styles.sectionHeaderRow}>
             <Text style={styles.sectionTitle}>Rutas disponibles</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Search' as never)}>
+            <TouchableOpacity onPress={() => navigation.navigate('Main' as never, { screen: 'Search' } as never)}>
               <Text style={styles.seeAllText}>Ver todas</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Route Card 1 */}
+          {/* Route Card 1 - Gradient Style */}
           <TouchableOpacity
-            style={styles.routeCard}
+            style={styles.homeRouteCardWrapper}
             onPress={() => navigation.navigate('SeatSelection' as never)}
-            activeOpacity={0.85}
+            activeOpacity={0.75}
           >
-            <View style={styles.routeTop}>
-              <View style={styles.routeLeft}>
-                <View style={styles.routeLocationRow}>
-                  <View style={styles.routeDotGreen} />
-                  <Text style={styles.routeOrigin} numberOfLines={1}>Puerto Tejada → Cali</Text>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primary + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.homeRouteCardGradient}
+            >
+              <View style={styles.homeRouteTop}>
+                <View style={styles.homeRouteRouteContainer}>
+                  <View style={styles.homeRouteDotOrigin} />
+                  <Text style={styles.homeRouteText} numberOfLines={1}>
+                    Puerto Tejada → Cali
+                  </Text>
                 </View>
-                <Text style={styles.routeTime}>Hoy · 2:30 PM</Text>
-              </View>
-              <View style={styles.routeRight}>
-                <Text style={styles.routePrice}>$5.500</Text>
-                <Text style={styles.routePricePer}>/asiento</Text>
-              </View>
-            </View>
-
-            <View style={styles.routeDivider} />
-
-            <View style={styles.routeBottom}>
-              <View style={styles.routeMeta}>
-                <View style={styles.routeMetaItem}>
-                  <Ionicons name="time-outline" size={13} color={COLORS.textSecondary} />
-                  <Text style={styles.routeMetaText}>45 min</Text>
-                </View>
-                <View style={styles.routeMetaItem}>
-                  <Ionicons name="car-outline" size={13} color={COLORS.textSecondary} />
-                  <Text style={styles.routeMetaText} numberOfLines={1}>Toyota Gris</Text>
+                <View style={styles.homeRoutePriceBox}>
+                  <Text style={styles.homeRoutePrice}>$5.500</Text>
                 </View>
               </View>
 
-              <View style={styles.routeDriver}>
-                <View style={styles.driverAvatar}>
-                  <Text style={styles.driverInitials}>JR</Text>
+              <View style={styles.homeRouteMiddle}>
+                <View style={styles.homeRouteDetailItem}>
+                  <Ionicons name="time-outline" size={14} color="#fff" />
+                  <Text style={styles.homeRouteDetailText}>45 min</Text>
                 </View>
-                <View style={styles.driverInfo}>
-                  <Text style={styles.driverName} numberOfLines={1}>Juan R.</Text>
-                  <View style={styles.ratingRow}>
-                    <Ionicons name="star" size={10} color={COLORS.accent} />
-                    <Text style={styles.ratingText}>4.8</Text>
+                <View style={styles.homeRouteDetailItem}>
+                  <Ionicons name="calendar-outline" size={14} color="#fff" />
+                  <Text style={styles.homeRouteDetailText}>Hoy · 2:30 PM</Text>
+                </View>
+              </View>
+
+              <View style={styles.homeRouteDivider} />
+
+              <View style={styles.homeRouteBottom}>
+                <View style={styles.homeRouteDriver}>
+                  <View style={styles.homeDriverAvatar}>
+                    <Text style={styles.homeDriverInitials}>JR</Text>
+                  </View>
+                  <View style={styles.homeDriverDetails}>
+                    <Text style={styles.homeDriverName} numberOfLines={1}>Juan R.</Text>
+                    <View style={styles.homeRatingBadge}>
+                      <Ionicons name="star" size={10} color={COLORS.accent} />
+                      <Text style={styles.homeRatingText}>4.8</Text>
+                    </View>
                   </View>
                 </View>
-                <View style={styles.seatsBadge}>
-                  <Text style={styles.seatsText}>3</Text>
+                <View style={styles.homeSeatsAvailable}>
+                  <Ionicons name="people-outline" size={14} color="#fff" />
+                  <Text style={styles.homeSeatsText}>3 libres</Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
           </TouchableOpacity>
 
-          {/* Route Card 2 */}
+          {/* Route Card 2 - Gradient Style */}
           <TouchableOpacity
-            style={styles.routeCard}
+            style={styles.homeRouteCardWrapper}
             onPress={() => navigation.navigate('SeatSelection' as never)}
-            activeOpacity={0.85}
+            activeOpacity={0.75}
           >
-            <View style={styles.routeTop}>
-              <View style={styles.routeLeft}>
-                <View style={styles.routeLocationRow}>
-                  <View style={styles.routeDotGreen} />
-                  <Text style={styles.routeOrigin} numberOfLines={1}>Jamundí → Cali</Text>
+            <LinearGradient
+              colors={[COLORS.primary, COLORS.primary + 'CC']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.homeRouteCardGradient}
+            >
+              <View style={styles.homeRouteTop}>
+                <View style={styles.homeRouteRouteContainer}>
+                  <View style={styles.homeRouteDotOrigin} />
+                  <Text style={styles.homeRouteText} numberOfLines={1}>
+                    Jamundí → Cali
+                  </Text>
                 </View>
-                <Text style={styles.routeTime}>Hoy · 3:00 PM</Text>
-              </View>
-              <View style={styles.routeRight}>
-                <Text style={styles.routePrice}>$4.200</Text>
-                <Text style={styles.routePricePer}>/asiento</Text>
-              </View>
-            </View>
-
-            <View style={styles.routeDivider} />
-
-            <View style={styles.routeBottom}>
-              <View style={styles.routeMeta}>
-                <View style={styles.routeMetaItem}>
-                  <Ionicons name="time-outline" size={13} color={COLORS.textSecondary} />
-                  <Text style={styles.routeMetaText}>35 min</Text>
-                </View>
-                <View style={styles.routeMetaItem}>
-                  <Ionicons name="car-outline" size={13} color={COLORS.textSecondary} />
-                  <Text style={styles.routeMetaText} numberOfLines={1}>Honda Negro</Text>
+                <View style={styles.homeRoutePriceBox}>
+                  <Text style={styles.homeRoutePrice}>$4.200</Text>
                 </View>
               </View>
 
-              <View style={styles.routeDriver}>
-                <View style={[styles.driverAvatar, { backgroundColor: COLORS.accent }]}>
-                  <Text style={styles.driverInitials}>MP</Text>
+              <View style={styles.homeRouteMiddle}>
+                <View style={styles.homeRouteDetailItem}>
+                  <Ionicons name="time-outline" size={14} color="#fff" />
+                  <Text style={styles.homeRouteDetailText}>35 min</Text>
                 </View>
-                <View style={styles.driverInfo}>
-                  <Text style={styles.driverName} numberOfLines={1}>María P.</Text>
-                  <View style={styles.ratingRow}>
-                    <Ionicons name="star" size={10} color={COLORS.accent} />
-                    <Text style={styles.ratingText}>4.9</Text>
+                <View style={styles.homeRouteDetailItem}>
+                  <Ionicons name="calendar-outline" size={14} color="#fff" />
+                  <Text style={styles.homeRouteDetailText}>Hoy · 3:00 PM</Text>
+                </View>
+              </View>
+
+              <View style={styles.homeRouteDivider} />
+
+              <View style={styles.homeRouteBottom}>
+                <View style={styles.homeRouteDriver}>
+                  <View style={styles.homeDriverAvatar}>
+                    <Text style={styles.homeDriverInitials}>MC</Text>
+                  </View>
+                  <View style={styles.homeDriverDetails}>
+                    <Text style={styles.homeDriverName} numberOfLines={1}>María C.</Text>
+                    <View style={styles.homeRatingBadge}>
+                      <Ionicons name="star" size={10} color={COLORS.accent} />
+                      <Text style={styles.homeRatingText}>4.9</Text>
+                    </View>
                   </View>
                 </View>
-                <View style={[styles.seatsBadge, { backgroundColor: COLORS.success + '20' }]}>
-                  <Text style={[styles.seatsText, { color: COLORS.success }]}>5</Text>
+                <View style={styles.homeSeatsAvailable}>
+                  <Ionicons name="people-outline" size={14} color="#fff" />
+                  <Text style={styles.homeSeatsText}>2 libres</Text>
                 </View>
               </View>
-            </View>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -351,7 +379,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background,
   },
 
-  // Fondo con círculos decorativos
+  // Fondo con círculos decorativos 3D
   gradientBg: {
     position: 'absolute',
     top: 0,
@@ -359,35 +387,27 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  gradientCircle1: {
+  gradientCircle: {
     position: 'absolute',
-    top: -60,
-    right: -40,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: COLORS.primary,
-    opacity: 0.12,
+    borderRadius: 9999,
+  },
+  gradientCircle1: {
+    top: -80,
+    right: -60,
+    width: 280,
+    height: 280,
   },
   gradientCircle2: {
-    position: 'absolute',
-    top: 180,
-    left: -100,
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: COLORS.primary,
-    opacity: 0.08,
+    top: 200,
+    left: -120,
+    width: 360,
+    height: 360,
   },
   gradientCircle3: {
-    position: 'absolute',
-    top: 420,
-    right: -60,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: COLORS.accent,
-    opacity: 0.06,
+    top: 480,
+    right: -80,
+    width: 240,
+    height: 240,
   },
 
   container: {
@@ -889,5 +909,128 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     color: COLORS.primary,
+  },
+
+  // Home Route Cards - Gradient Style
+  homeRouteCardWrapper: {
+    marginBottom: SPACING.md,
+    borderRadius: RADIUS.lg,
+    overflow: 'hidden',
+    ...SHADOWS.md,
+  },
+  homeRouteCardGradient: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+  },
+  homeRouteTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  homeRouteRouteContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  homeRouteDotOrigin: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#fff',
+  },
+  homeRouteText: {
+    ...TYPOGRAPHY.bodyMedium,
+    color: '#fff',
+    fontWeight: '700',
+  },
+  homeRoutePriceBox: {
+    marginLeft: SPACING.md,
+  },
+  homeRoutePrice: {
+    ...TYPOGRAPHY.h4,
+    color: '#fff',
+    fontWeight: '700',
+  },
+  homeRouteMiddle: {
+    flexDirection: 'row',
+    gap: SPACING.lg,
+    marginBottom: SPACING.sm,
+  },
+  homeRouteDetailItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  homeRouteDetailText: {
+    ...TYPOGRAPHY.label,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  homeRouteDivider: {
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginVertical: SPACING.sm,
+  },
+  homeRouteBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  homeRouteDriver: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  homeDriverAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.md,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  homeDriverInitials: {
+    ...TYPOGRAPHY.label,
+    color: '#fff',
+    fontWeight: '700',
+  },
+  homeDriverDetails: {
+    flex: 1,
+  },
+  homeDriverName: {
+    ...TYPOGRAPHY.label,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  homeRatingBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    marginTop: SPACING.xs,
+  },
+  homeRatingText: {
+    ...TYPOGRAPHY.label,
+    color: COLORS.accent,
+    fontWeight: '600',
+    fontSize: 10,
+  },
+  homeSeatsAvailable: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.xs,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.md,
+  },
+  homeSeatsText: {
+    ...TYPOGRAPHY.label,
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 12,
   },
 })

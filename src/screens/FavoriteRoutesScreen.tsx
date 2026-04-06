@@ -123,7 +123,7 @@ export default function FavoriteRoutesScreen() {
 
                 <TouchableOpacity
                   style={styles.bookBtn}
-                  onPress={() => navigation.navigate('Search' as never)}
+                  onPress={() => navigation.navigate('Main' as never, { screen: 'Search' } as never)}
                 >
                   <Ionicons name="arrow-forward" size={18} color={COLORS.textInverse} />
                   <Text style={styles.bookBtnText}>Reservar ahora</Text>
