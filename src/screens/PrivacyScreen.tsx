@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   View,
   Text,
@@ -7,10 +7,16 @@ import {
   ScrollView,
   Switch,
   Alert,
+  ActivityIndicator,
+  Platform,
+  Share,
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
+import * as FileSystem from 'expo-file-system'
+import { getItem, setItem } from '../utils/storage'
+import { exportUserData } from '../services/exportData'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 
 export default function PrivacyScreen() {
@@ -21,16 +27,111 @@ export default function PrivacyScreen() {
   const [showRating, setShowRating] = useState(true)
   const [allowMessages, setAllowMessages] = useState(true)
   const [searchIndexing, setSearchIndexing] = useState(false)
+  const [isExportingData, setIsExportingData] = useState(false)
+
+  useEffect(() => {
+    const loadPrivacySettings = async () => {
+      try {
+        const [
+          storedPublic,
+          storedShareLocation,
+          storedShowRating,
+          storedAllowMessages,
+          storedSearchIndexing,
+        ] = await Promise.all([
+          getItem('privacy_public_profile'),
+          getItem('privacy_share_location'),
+          getItem('privacy_show_rating'),
+          getItem('privacy_allow_messages'),
+          getItem('privacy_search_indexing'),
+        ])
+
+        if (storedPublic !== null) {
+          setIsPublicProfile(storedPublic === 'true')
+        }
+        if (storedShareLocation !== null) {
+          setShareLocation(storedShareLocation === 'true')
+        }
+        if (storedShowRating !== null) {
+          setShowRating(storedShowRating === 'true')
+        }
+        if (storedAllowMessages !== null) {
+          setAllowMessages(storedAllowMessages === 'true')
+        }
+        if (storedSearchIndexing !== null) {
+          setSearchIndexing(storedSearchIndexing === 'true')
+        }
+      } catch (error) {
+        console.log('Error loading privacy settings:', error)
+      }
+    }
+
+    loadPrivacySettings()
+  }, [])
+
+  const savePrivacySetting = async (key: string, value: boolean) => {
+    try {
+      await setItem(key, value.toString())
+    } catch (error) {
+      console.log(`Error saving privacy setting ${key}:`, error)
+    }
+  }
+
+  const togglePublicProfile = () => {
+    const nextValue = !isPublicProfile
+    setIsPublicProfile(nextValue)
+    savePrivacySetting('privacy_public_profile', nextValue)
+  }
 
   const handleDownloadData = () => {
     Alert.alert(
       'Descargar mis datos',
-      'Se enviará un archivo con toda tu información personal a tu correo electrónico. Esto puede tomar hasta 48 horas.',
+      'Se generará un archivo JSON con tu información personal para que puedas guardarla o compartirla.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Descargar',
-          onPress: () => Alert.alert('Éxito', 'Se enviará un enlace de descarga a tu correo'),
+          text: 'Generar archivo',
+          onPress: async () => {
+            setIsExportingData(true)
+            try {
+              const data = await exportUserData()
+              const fileName = `trive-data-export-${new Date()
+                .toISOString()
+                .replace(/[:.]/g, '-')}.json`
+              const jsonContent = JSON.stringify(data, null, 2)
+
+              if (Platform.OS === 'web' && typeof document !== 'undefined' && typeof Blob !== 'undefined') {
+                const blob = new Blob([jsonContent], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const anchor = document.createElement('a')
+                anchor.href = url
+                anchor.download = fileName
+                document.body.appendChild(anchor)
+                anchor.click()
+                anchor.remove()
+                URL.revokeObjectURL(url)
+              } else {
+                const directory = FileSystem.documentDirectory || FileSystem.cacheDirectory || ''
+                const fileUri = `${directory}${fileName}`
+                await FileSystem.writeAsStringAsync(fileUri, jsonContent, {
+                  encoding: FileSystem.EncodingType.UTF8,
+                })
+
+                await Share.share({
+                  url: fileUri,
+                  title: 'Exportación de datos de Trive',
+                  message: 'Aquí tienes tu archivo de datos de Trive.',
+                })
+              }
+
+              Alert.alert('¡Listo!', 'Tu archivo de datos se generó correctamente.')
+            } catch (error: any) {
+              console.error('Error exportando datos:', error)
+              Alert.alert('Error', error?.message || 'No se pudo generar el archivo de datos.')
+            } finally {
+              setIsExportingData(false)
+            }
+          },
         },
       ]
     )
@@ -83,7 +184,11 @@ export default function PrivacyScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mi Perfil</Text>
 
-          <View style={styles.card}>
+          <TouchableOpacity
+            style={styles.card}
+            onPress={togglePublicProfile}
+            activeOpacity={0.8}
+          >
             <View style={styles.cardHeader}>
               <View style={styles.cardIcon}>
                 <Ionicons name="person-outline" size={20} color={COLORS.primary} />
@@ -93,15 +198,23 @@ export default function PrivacyScreen() {
                 <Text style={styles.cardDescription}>
                   {isPublicProfile ? 'Tu perfil es visible para todos' : 'Tu perfil solo es visible para contactos'}
                 </Text>
+                <Text style={styles.cardHint}>
+                  Toca para cambiar el estado de tu perfil público
+                </Text>
               </View>
-              <Switch
-                value={isPublicProfile}
-                onValueChange={setIsPublicProfile}
-                trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '50' }}
-                thumbColor={isPublicProfile ? COLORS.primary : COLORS.textTertiary}
-              />
+              <View style={styles.switchWrapper}>
+                <Switch
+                  value={isPublicProfile}
+                  onValueChange={(value) => {
+                    setIsPublicProfile(value)
+                    savePrivacySetting('privacy_public_profile', value)
+                  }}
+                  trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '50' }}
+                  thumbColor={isPublicProfile ? COLORS.primary : COLORS.textTertiary}
+                />
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.card}>
             <View style={styles.cardHeader}>
@@ -116,7 +229,10 @@ export default function PrivacyScreen() {
               </View>
               <Switch
                 value={showRating}
-                onValueChange={setShowRating}
+                onValueChange={(value) => {
+                  setShowRating(value)
+                  savePrivacySetting('privacy_show_rating', value)
+                }}
                 trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '50' }}
                 thumbColor={showRating ? COLORS.primary : COLORS.textTertiary}
               />
@@ -141,7 +257,10 @@ export default function PrivacyScreen() {
               </View>
               <Switch
                 value={shareLocation}
-                onValueChange={setShareLocation}
+                onValueChange={(value) => {
+                  setShareLocation(value)
+                  savePrivacySetting('privacy_share_location', value)
+                }}
                 trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '50' }}
                 thumbColor={shareLocation ? COLORS.primary : COLORS.textTertiary}
               />
@@ -166,7 +285,10 @@ export default function PrivacyScreen() {
               </View>
               <Switch
                 value={allowMessages}
-                onValueChange={setAllowMessages}
+                onValueChange={(value) => {
+                  setAllowMessages(value)
+                  savePrivacySetting('privacy_allow_messages', value)
+                }}
                 trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '50' }}
                 thumbColor={allowMessages ? COLORS.primary : COLORS.textTertiary}
               />
@@ -181,12 +303,17 @@ export default function PrivacyScreen() {
               <View style={styles.cardContent}>
                 <Text style={styles.cardLabel}>Indexación en Búsqueda</Text>
                 <Text style={styles.cardDescription}>
-                  {searchIndexing ? 'Motores de búsqueda pueden indexar tu perfil' : 'Tu perfil no aparece en búsquedas'}
+                  {searchIndexing
+                    ? 'Tu perfil puede aparecer en las búsquedas dentro de la app'
+                    : 'Tu perfil no aparece en las búsquedas dentro de la app'}
                 </Text>
               </View>
               <Switch
                 value={searchIndexing}
-                onValueChange={setSearchIndexing}
+                onValueChange={(value) => {
+                  setSearchIndexing(value)
+                  savePrivacySetting('privacy_search_indexing', value)
+                }}
                 trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '50' }}
                 thumbColor={searchIndexing ? COLORS.primary : COLORS.textTertiary}
               />
@@ -224,6 +351,7 @@ export default function PrivacyScreen() {
             style={styles.card}
             onPress={handleDownloadData}
             activeOpacity={0.7}
+            disabled={isExportingData}
           >
             <View style={styles.cardHeader}>
               <View style={styles.cardIcon}>
@@ -233,7 +361,11 @@ export default function PrivacyScreen() {
                 <Text style={styles.cardLabel}>Descargar mis Datos</Text>
                 <Text style={styles.cardDescription}>Obtén una copia de tu información</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+              {isExportingData ? (
+                <ActivityIndicator size="small" color={COLORS.primary} />
+              ) : (
+                <Ionicons name="chevron-forward" size={20} color={COLORS.textTertiary} />
+              )}
             </View>
           </TouchableOpacity>
 
@@ -319,6 +451,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: SPACING.lg,
   },
+  switchWrapper: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   cardIcon: {
     width: 44,
     height: 44,
@@ -338,6 +474,11 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
     fontWeight: '500',
     marginBottom: SPACING.xs,
+  },
+  cardHint: {
+    ...TYPOGRAPHY.bodySmall,
+    color: COLORS.textSecondary,
+    marginTop: SPACING.xs,
   },
   dangerLabel: {
     color: COLORS.error,

@@ -1,9 +1,16 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Switch, Alert } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
+import {
+  authenticateBiometric,
+  getStoredBiometricEnabled,
+  isBiometricEnrolled,
+  isBiometricSupported,
+  setStoredBiometricEnabled,
+} from '../services/biometricAuth'
 
 export default function SettingsScreen() {
   const navigation = useNavigation()
@@ -12,6 +19,23 @@ export default function SettingsScreen() {
   const [smsNotifications, setSmsNotifications] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const [biometric, setBiometric] = useState(false)
+  const [biometricAvailable, setBiometricAvailable] = useState(true)
+
+  useEffect(() => {
+    const loadBiometric = async () => {
+      const supported = await isBiometricSupported()
+      setBiometricAvailable(supported)
+      if (!supported) {
+        setBiometric(false)
+        return
+      }
+
+      const enabled = await getStoredBiometricEnabled()
+      setBiometric(enabled)
+    }
+
+    loadBiometric()
+  }, [])
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top', 'left', 'right']}>
@@ -106,7 +130,42 @@ export default function SettingsScreen() {
             </View>
             <Switch 
               value={biometric}
-              onValueChange={setBiometric}
+              onValueChange={async () => {
+                if (biometric) {
+                  setBiometric(false)
+                  await setStoredBiometricEnabled(false)
+                  Alert.alert('Autenticación Biométrica', 'Autenticación biométrica desactivada')
+                  return
+                }
+
+                const supported = await isBiometricSupported()
+                if (!supported) {
+                  Alert.alert(
+                    'Autenticación Biométrica',
+                    'Tu dispositivo no soporta autenticación biométrica o no tiene sensores configurados.'
+                  )
+                  return
+                }
+
+                const enrolled = await isBiometricEnrolled()
+                if (!enrolled) {
+                  Alert.alert(
+                    'Autenticación Biométrica',
+                    'No hay datos biométricos registrados. Configura tu huella o reconocimiento facial en el dispositivo.'
+                  )
+                  return
+                }
+
+                const success = await authenticateBiometric()
+                if (success) {
+                  setBiometric(true)
+                  await setStoredBiometricEnabled(true)
+                  Alert.alert('Autenticación Biométrica', 'Autenticación biométrica activada correctamente.')
+                } else {
+                  Alert.alert('Autenticación Biométrica', 'No se pudo verificar tu identidad. Intenta de nuevo.')
+                }
+              }}
+              disabled={!biometricAvailable}
               trackColor={{ false: COLORS.borderLight, true: COLORS.primary + '30' }}
               thumbColor={biometric ? COLORS.primary : COLORS.textTertiary}
             />
@@ -149,7 +208,7 @@ export default function SettingsScreen() {
 
         <TouchableOpacity 
           style={styles.settingCard}
-          onPress={() => Alert.alert('Sesiones Activas', 'Gesiona los dispositivos conectados')}
+          onPress={() => navigation.navigate('SessionHistory' as never)}
           activeOpacity={0.7}
         >
           <View style={styles.settingHeader}>
@@ -192,7 +251,7 @@ export default function SettingsScreen() {
 
         <TouchableOpacity 
           style={styles.settingCard}
-          onPress={() => Alert.alert('Idioma', 'Selecciona tu idioma preferido')}
+          onPress={() => navigation.navigate('Language' as never)}
           activeOpacity={0.7}
         >
           <View style={styles.settingHeader}>

@@ -28,9 +28,9 @@ export default function BugReportScreen() {
 
   const categories: { id: BugCategory; label: string; icon: string }[] = [
     { id: 'crash', label: 'Aplicación se cierra', icon: 'alert-circle-outline' },
-    { id: 'visual', label: 'Problema visual', icon: 'palette-outline' },
+    { id: 'visual', label: 'Problema visual', icon: 'color-palette-outline' },
     { id: 'network', label: 'Conexión/Red', icon: 'wifi-outline' },
-    { id: 'performance', label: 'Rendimiento lento', icon: 'speed-outline' },
+    { id: 'performance', label: 'Rendimiento lento', icon: 'speedometer-outline' },
     { id: 'other', label: 'Otro', icon: 'help-circle-outline' },
   ]
 

@@ -34,6 +34,10 @@ import AboutTriveScreen from '../screens/AboutTriveScreen'
 import TermsOfServiceScreen from '../screens/TermsOfServiceScreen'
 import PrivacyPolicyScreen from '../screens/PrivacyPolicyScreen'
 import SupportScreen from '../screens/SupportScreen'
+import HelpScreen from '../screens/HelpScreen'
+import LanguageScreen from '../screens/LanguageScreen'
+import LearningCenterScreen from '../screens/LearningCenterScreen'
+import BugReportScreen from '../screens/BugReportScreen'
 import { useAppStore } from '../store/useAppStore'
 import { useAuth } from '../hooks/useAuth'
 
@@ -109,6 +113,10 @@ export default function AppNavigator() {
             <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
             <Stack.Screen name="Support" component={SupportScreen} />
+            <Stack.Screen name="Language" component={LanguageScreen} />
+            <Stack.Screen name="Help" component={HelpScreen} />
+            <Stack.Screen name="LearningCenter" component={LearningCenterScreen} />
+            <Stack.Screen name="BugReport" component={BugReportScreen} />
           </>
         )}
       </Stack.Navigator>

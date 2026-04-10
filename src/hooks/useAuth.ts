@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../services/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { useAppStore } from "../store/useAppStore";
+import { registerUserSession, deactivateCurrentSession, clearLocalSessionKey } from "../services/userSessions";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -76,6 +77,8 @@ export const useAuth = () => {
           avatar_url: insertedProfile.avatar_url,
         });
       }
+
+      await registerUserSession(currentSession.user.id);
     } catch (err: any) {
       console.error("Error restoring profile from session:", err);
       setAppUser(null);
@@ -245,6 +248,8 @@ export const useAuth = () => {
     try {
       setError(null);
       setLoading(true);
+      await deactivateCurrentSession();
+      await clearLocalSessionKey();
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       

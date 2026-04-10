@@ -3,7 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { Ionicons } from '@expo/vector-icons'
 import { useNavigation } from '@react-navigation/native'
 import { useState, useEffect } from 'react'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import { getItem, setItem } from '../utils/storage'
 import { COLORS, TYPOGRAPHY, SPACING, RADIUS, SHADOWS } from '../theme/theme'
 
 type Language = 'es' | 'en' | 'pt' | 'fr'
@@ -59,7 +59,7 @@ export default function LanguageScreen() {
 
   const loadSelectedLanguage = async () => {
     try {
-      const saved = await AsyncStorage.getItem('app_language')
+      const saved = await getItem('app_language')
       if (saved) {
         setSelectedLanguage(saved as Language)
       }
@@ -73,7 +73,7 @@ export default function LanguageScreen() {
   const handleSelectLanguage = async (language: Language) => {
     try {
       setSelectedLanguage(language)
-      await AsyncStorage.setItem('app_language', language)
+      await setItem('app_language', language)
       
       // You can add additional logic here to change app language
       // For now it's just for preference storage
@@ -113,6 +113,26 @@ export default function LanguageScreen() {
             <Text style={styles.welcomeTitle}>Selecciona tu Idioma</Text>
             <Text style={styles.welcomeText}>
               Cambia el idioma de la aplicación para una mejor experiencia
+            </Text>
+          </View>
+        </View>
+
+        {/* Brand Identity */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Identidad Visual</Text>
+          <View style={styles.identityCard}>
+            <View style={styles.identityHeader}>
+              <View style={styles.brandLogo}>
+                <Text style={styles.brandLogoText}>TR</Text>
+              </View>
+              <View style={styles.identityText}>
+                <Text style={styles.identityTitle}>Trive</Text>
+                <Text style={styles.identitySubtitle}>Movilidad confiable, segura y cercana</Text>
+              </View>
+            </View>
+            <Text style={styles.identityDescription}>
+              Esta pantalla conserva la identidad visual de Trive: colores, tipografía y estilo de tarjetas.
+              Aquí eliges tu idioma sin perder la experiencia de marca.
             </Text>
           </View>
         </View>
@@ -297,6 +317,52 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  identityCard: {
+    backgroundColor: COLORS.surface,
+    borderRadius: RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    ...SHADOWS.sm,
+  },
+  identityHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.sm,
+  },
+  brandLogo: {
+    width: 56,
+    height: 56,
+    borderRadius: 20,
+    backgroundColor: COLORS.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: SPACING.md,
+  },
+  brandLogoText: {
+    ...TYPOGRAPHY.h3,
+    color: COLORS.background,
+    letterSpacing: 1,
+  },
+  identityText: {
+    flex: 1,
+  },
+  identityTitle: {
+    ...TYPOGRAPHY.h4,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+    marginBottom: SPACING.xs,
+  },
+  identitySubtitle: {
+    ...TYPOGRAPHY.body,
+    color: COLORS.textSecondary,
+  },
+  identityDescription: {
+    ...TYPOGRAPHY.bodySmall,
+    color: COLORS.textSecondary,
+    lineHeight: 20,
   },
   checkMarkActive: {
     backgroundColor: COLORS.primary,
